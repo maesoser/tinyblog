@@ -1,0 +1,28 @@
+{
+  "name": "tinyblog",
+  "version": "1.0.0",
+  "description": "A personal blog CMS built on Cloudflare Workers, D1, and R2.",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc",
+    "db:migrate:local": "wrangler d1 execute tinyblog-db --local --file=./migrations/0001_schema.sql && wrangler d1 execute tinyblog-db --local --file=./migrations/0002_published_at_site_config.sql && wrangler d1 execute tinyblog-db --local --file=./migrations/0003_site_url.sql",
+    "db:migrate:remote": "wrangler d1 execute tinyblog-db --remote --file=./migrations/0001_schema.sql && wrangler d1 execute tinyblog-db --remote --file=./migrations/0002_published_at_site_config.sql && wrangler d1 execute tinyblog-db --remote --file=./migrations/0003_site_url.sql"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "hono": "^4.12.9",
+    "marked": "^17.0.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260317.1",
+    "@types/marked": "^5.0.2",
+    "typescript": "^6.0.2",
+    "wrangler": "^4.77.0"
+  }
+}

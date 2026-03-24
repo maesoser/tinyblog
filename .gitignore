@@ -1,0 +1,38 @@
+# Wrangler config — contains personal database IDs and domain names.
+# Copy wrangler.jsonc.example → wrangler.jsonc and fill in your values.
+wrangler.jsonc
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Wrangler local state, temp bundles, local D1/R2 emulation data
+.wrangler/
+
+# Local secrets (Wrangler dev vars — never commit)
+.dev.vars
+.dev.vars.*
+
+# Environment files (safety net)
+.env
+.env.*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.swp
+*.swo
+*~

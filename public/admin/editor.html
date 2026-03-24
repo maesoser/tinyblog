@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tinyblog — Editor</title>
+  <link rel="stylesheet" href="/style.css" />
+  <!-- EasyMDE -->
+  <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css" />
+  <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+  <script>
+    (function(){
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) document.documentElement.classList.add('dark');
+    })();
+  </script>
+</head>
+<body class="admin-body">
+
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <a href="/admin/" class="admin-logo" id="sidebarLogo">tinyblog</a>
+    <nav class="admin-nav">
+      <a href="/admin/" class="admin-nav-link" aria-label="Posts">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="M13 5h8M13 9h5M3 15h18M3 19h18"/></svg>
+        <span class="nav-label">Posts</span>
+      </a>
+      <a href="/admin/editor.html" class="admin-nav-link active" aria-label="New Post">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+        <span class="nav-label">New Post</span>
+      </a>
+      <a href="/admin/settings.html" class="admin-nav-link" aria-label="Settings">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="nav-label">Settings</span>
+      </a>
+      <a href="/" class="admin-nav-link" target="_blank" aria-label="View Blog">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+        <span class="nav-label">View Blog</span>
+      </a>
+    </nav>
+    <button class="theme-toggle admin-theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <svg class="icon-sun" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+      </svg>
+      <svg class="icon-moon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+      </svg>
+    </button>
+  </aside>
+
+  <!-- Mobile bottom nav -->
+  <nav class="mobile-bottom-nav" aria-label="Admin navigation">
+    <a href="/admin/" class="mobile-nav-item" aria-label="Posts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="M13 5h8M13 9h5M3 15h18M3 19h18"/></svg>
+      <span>Posts</span>
+    </a>
+    <a href="/admin/editor.html" class="mobile-nav-item active" aria-label="New Post">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      <span>New</span>
+    </a>
+    <a href="/admin/settings.html" class="mobile-nav-item" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>Settings</span>
+    </a>
+    <a href="/" class="mobile-nav-item" target="_blank" aria-label="View Blog">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      <span>Blog</span>
+    </a>
+    <button class="mobile-nav-item" id="mobileThemeToggle" aria-label="Toggle dark mode">
+      <svg class="icon-sun" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
+      <svg class="icon-moon" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
+      <span>Theme</span>
+    </button>
+  </nav>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1 class="admin-page-title" id="pageHeading">New Post</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-outline" id="saveDraftBtn">Save Draft</button>
+        <button class="btn btn-primary" id="publishBtn">Publish</button>
+      </div>
+    </div>
+
+    <div class="editor-layout">
+      <!-- Left: meta + editor -->
+      <div class="editor-left">
+        <div class="admin-card editor-meta-card">
+          <div class="form-row">
+            <label class="form-label" for="titleInput">Title <span class="required">*</span></label>
+            <input class="form-input" id="titleInput" type="text" placeholder="My amazing post" required />
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label class="form-label" for="authorInput">Author</label>
+              <input class="form-input" id="authorInput" type="text" placeholder="Admin" value="Admin" />
+            </div>
+            <div>
+              <label class="form-label" for="slugInput">Slug</label>
+              <input class="form-input" id="slugInput" type="text" placeholder="auto-generated" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="excerptInput">Excerpt</label>
+            <textarea class="form-input form-textarea" id="excerptInput" placeholder="A short description for post list (optional)" rows="2"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="tagsInput">Tags <span class="form-hint">(comma separated)</span></label>
+            <input class="form-input" id="tagsInput" type="text" placeholder="technology, cloudflare, tutorials" />
+          </div>
+        </div>
+
+        <!-- Markdown editor -->
+        <div class="editor-wrapper">
+          <textarea id="markdownEditor"></textarea>
+        </div>
+      </div>
+
+      <!-- Right: image upload -->
+      <div class="editor-right">
+        <div class="admin-card">
+          <h3 class="card-section-title">Upload Image / Asset</h3>
+          <p class="form-hint" style="margin-bottom:12px;">Upload files to attach to this post. The markdown link will be copied to clipboard.</p>
+          <div class="upload-zone" id="uploadZone">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:var(--cf-text-muted);margin-bottom:8px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            <p class="upload-hint">Drop files here or click to browse</p>
+            <input type="file" id="fileInput" multiple accept="image/*,video/*,.pdf,.zip" style="display:none" />
+          </div>
+          <ul class="asset-list" id="assetList"></ul>
+        </div>
+
+        <!-- Status card -->
+        <div class="admin-card" id="statusCard" style="display:none">
+          <h3 class="card-section-title">Post Info</h3>
+          <dl class="info-dl">
+            <dt>Status</dt><dd id="infoStatus">—</dd>
+            <dt>Created</dt><dd id="infoCreated">—</dd>
+            <dt>Published</dt><dd id="infoPublished">—</dd>
+            <dt>Updated</dt><dd id="infoUpdated">—</dd>
+            <dt>Public URL</dt><dd><a id="infoUrl" href="#" target="_blank">—</a></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+  </main>
+</div>
+
+<script>
+  // ── Theme toggle ──────────────────────────────────────────────────────────
+  function applyThemeToggle() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }
+  document.getElementById('themeToggle').addEventListener('click', applyThemeToggle);
+  document.getElementById('mobileThemeToggle').addEventListener('click', applyThemeToggle);
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  function authHeaders(extra = {}) {
+    const secret = localStorage.getItem('adminSecret') || '';
+    return secret ? { 'Authorization': `Bearer ${secret}`, ...extra } : { ...extra };
+  }
+
+  // ── Error helper ──────────────────────────────────────────────────────────
+  async function parseErrorResponse(res) {
+    const text = await res.text().catch(() => '');
+    console.error(`[tinyblog] API error ${res.status} ${res.url}:`, text);
+    try { return JSON.parse(text); } catch { return { error: `HTTP ${res.status}` }; }
+  }
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  let postId = null;
+  let currentSlug = null;
+  let currentStatus = 'draft';
+  let isDirty = false;
+
+  const params = new URLSearchParams(location.search);
+  if (params.has('id')) postId = Number(params.get('id'));
+
+  // ── EasyMDE setup ─────────────────────────────────────────────────────────
+  const easyMDE = new EasyMDE({
+    element: document.getElementById('markdownEditor'),
+    spellChecker: false,
+    autofocus: false,
+    placeholder: '# Hello World\n\nStart writing your post here…',
+    status: ['lines', 'words'],
+    toolbar: [
+      'bold','italic','heading','|',
+      'quote','unordered-list','ordered-list','|',
+      'link','image','table','horizontal-rule','|',
+      'preview','side-by-side','fullscreen','|',
+      {
+        name: 'upload-image',
+        action: () => document.getElementById('fileInput').click(),
+        className: 'fa fa-upload',
+        title: 'Upload Image',
+      },
+      '|','guide'
+    ],
+    uploadImage: false,
+  });
+
+  // Mark dirty on any content change
+  easyMDE.codemirror.on('change', () => { isDirty = true; });
+
+  // ── Unsaved-changes warning ───────────────────────────────────────────────
+  window.addEventListener('beforeunload', (e) => {
+    if (isDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // ── Slug auto-generation ──────────────────────────────────────────────────
+  const titleInput = document.getElementById('titleInput');
+  const slugInput  = document.getElementById('slugInput');
+  let slugManuallyEdited = false;
+
+  titleInput.addEventListener('input', () => {
+    isDirty = true;
+    if (!slugManuallyEdited) {
+      slugInput.value = slugify(titleInput.value);
+    }
+  });
+  slugInput.addEventListener('input', () => { slugManuallyEdited = true; isDirty = true; });
+  document.getElementById('authorInput').addEventListener('input', () => { isDirty = true; });
+  document.getElementById('excerptInput').addEventListener('input', () => { isDirty = true; });
+  document.getElementById('tagsInput').addEventListener('input', () => { isDirty = true; });
+
+  function slugify(s) {
+    return s.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  // ── Sidebar logo from site config ─────────────────────────────────────────
+  fetch('/api/site-config', { headers: authHeaders() })
+    .then(r => r.ok ? r.json() : null)
+    .then(cfg => { if (cfg?.blog_name) document.getElementById('sidebarLogo').textContent = cfg.blog_name; })
+    .catch(() => {});
+
+  // ── Load post if editing ──────────────────────────────────────────────────
+  async function loadPost(id) {
+    const res = await fetch(`/api/posts/${id}`, { headers: authHeaders() });
+    if (!res.ok) { showToast('Failed to load post', 'error'); return; }
+    const p = await res.json();
+
+    document.getElementById('pageHeading').textContent = 'Edit Post';
+    document.title = `Edit — ${p.title} — tinyblog`;
+    titleInput.value = p.title;
+    slugInput.value  = p.slug;
+    document.getElementById('authorInput').value  = p.author;
+    document.getElementById('excerptInput').value = p.excerpt || '';
+    document.getElementById('tagsInput').value    = (p.tags || []).join(', ');
+    easyMDE.value(p.markdown || '');
+    currentSlug = p.slug;
+    currentStatus = p.status;
+    slugManuallyEdited = true;
+
+    // Update publish button label if already published
+    if (p.status === 'published') {
+      document.getElementById('publishBtn').textContent = 'Update';
+    }
+
+    // Status card
+    updateStatusCard(p);
+
+    // Load previously uploaded assets
+    loadAssets(id);
+
+    // Clear dirty flag — we just loaded clean state
+    isDirty = false;
+  }
+
+  async function loadAssets(id) {
+    const res = await fetch(`/api/posts/${id}/assets`, { headers: authHeaders() });
+    if (!res.ok) return; // non-fatal — asset list just stays empty
+    const { assets } = await res.json();
+    for (const asset of assets) {
+      const isImage = /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(asset.filename);
+      const mdLink  = isImage ? `![${asset.filename}](${asset.url})` : `[${asset.filename}](${asset.url})`;
+      const li = document.createElement('li');
+      li.className = 'asset-item';
+      li.innerHTML = `
+        <span class="asset-name">${escHtml(asset.filename)}</span>
+        <button class="btn btn-sm btn-outline" onclick="insertMd(${JSON.stringify(mdLink)})">Insert</button>
+        <button class="btn btn-sm btn-outline" onclick="copyToClipboard(${JSON.stringify(asset.url)}, this)">Copy URL</button>`;
+      assetList.appendChild(li);
+    }
+  }
+
+  if (postId) loadPost(postId);
+
+  // ── Update status card ────────────────────────────────────────────────────
+  function updateStatusCard(p) {
+    document.getElementById('statusCard').style.display = 'block';
+    document.getElementById('infoStatus').textContent  = p.status;
+    document.getElementById('infoCreated').textContent = new Date(p.created_at).toLocaleString();
+    document.getElementById('infoUpdated').textContent = new Date(p.updated_at).toLocaleString();
+    document.getElementById('infoPublished').textContent = p.published_at
+      ? new Date(p.published_at).toLocaleString()
+      : '—';
+    const urlEl = document.getElementById('infoUrl');
+    urlEl.href = `/posts/${encodeURIComponent(p.slug)}`;
+    urlEl.textContent = `/posts/${p.slug}`;
+  }
+
+  // ── Save / publish ────────────────────────────────────────────────────────
+  //
+  // KEY FIX: When editing an existing post, "Save Draft" does NOT send a status
+  // field — it only saves content. This prevents accidentally unpublishing a
+  // live post. "Publish" always sends status: 'published'.
+  //
+  async function save(intentStatus) {
+    const title    = titleInput.value.trim();
+    const author   = document.getElementById('authorInput').value.trim() || 'Admin';
+    const excerpt  = document.getElementById('excerptInput').value.trim();
+    const tags     = document.getElementById('tagsInput').value.split(',').map(t => t.trim()).filter(Boolean);
+    const markdown = easyMDE.value();
+    const slug     = slugInput.value.trim() || undefined;
+
+    if (!title) { showToast('Title is required', 'error'); return; }
+
+    let res;
+    if (postId) {
+      // Editing an existing post: only include status when explicitly publishing.
+      // Never send status: 'draft' here — use the Unpublish button in the post list
+      // to revert. This prevents "Save Draft" from killing a live post.
+      const body = { title, author, excerpt: excerpt || undefined, markdown, tags };
+      if (slug) body.slug = slug;
+      if (intentStatus === 'published') body.status = 'published';
+
+      res = await fetch(`/api/posts/${postId}`, {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(body),
+      });
+    } else {
+      // New post: always send the intended status
+      const body = { title, author, excerpt: excerpt || undefined, status: intentStatus, markdown, tags };
+      if (slug) body.slug = slug;
+
+      res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(body),
+      });
+    }
+
+    if (!res.ok) {
+      const err = await parseErrorResponse(res);
+      showToast(err.error || 'Save failed', 'error');
+      return;
+    }
+
+    const saved = await res.json();
+    isDirty = false; // Reset dirty flag after successful save
+
+    if (!postId) {
+      postId = saved.id;
+      currentSlug = saved.slug;
+      history.replaceState(null, '', `/admin/editor.html?id=${postId}`);
+      document.getElementById('pageHeading').textContent = 'Edit Post';
+    }
+
+    currentStatus = saved.status;
+
+    // Update publish button label
+    if (saved.status === 'published') {
+      document.getElementById('publishBtn').textContent = 'Update';
+    }
+
+    updateStatusCard(saved);
+    currentSlug = saved.slug;
+
+    showToast(intentStatus === 'published' ? 'Published!' : 'Draft saved', 'success');
+  }
+
+  document.getElementById('saveDraftBtn').addEventListener('click', () => save('draft'));
+  document.getElementById('publishBtn').addEventListener('click', () => save('published'));
+
+  // ── File upload ───────────────────────────────────────────────────────────
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput  = document.getElementById('fileInput');
+  const assetList  = document.getElementById('assetList');
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+  uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    uploadFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener('change', () => uploadFiles(fileInput.files));
+
+  async function uploadFiles(files) {
+    const slug = currentSlug || slugInput.value.trim() || slugify(titleInput.value);
+    if (!slug) { showToast('Save the post first to get a slug before uploading', 'error'); return; }
+
+    for (const file of files) {
+      const li = document.createElement('li');
+      li.className = 'asset-item';
+      li.textContent = `Uploading ${file.name}…`;
+      assetList.prepend(li);
+
+      const fd = new FormData();
+      fd.append('slug', slug);
+      fd.append('file', file);
+
+      const res = await fetch('/api/assets/upload', { method: 'POST', headers: authHeaders(), body: fd });
+      if (!res.ok) {
+        li.textContent = `✗ ${file.name} — upload failed`;
+        li.className = 'asset-item asset-error';
+        continue;
+      }
+
+      const { url } = await res.json();
+      const isImage = file.type.startsWith('image/');
+      const mdLink  = isImage ? `![${file.name}](${url})` : `[${file.name}](${url})`;
+
+      li.innerHTML = `
+        <span class="asset-name">${escHtml(file.name)}</span>
+        <button class="btn btn-sm btn-outline" onclick="insertMd(${JSON.stringify(mdLink)})">Insert</button>
+        <button class="btn btn-sm btn-outline" onclick="copyToClipboard(${JSON.stringify(url)}, this)">Copy URL</button>`;
+
+      // Auto-insert into editor
+      easyMDE.codemirror.replaceSelection(mdLink + '\n');
+    }
+    fileInput.value = '';
+  }
+
+  function insertMd(md) {
+    easyMDE.codemirror.replaceSelection(md + '\n');
+    easyMDE.codemirror.focus();
+  }
+
+  async function copyToClipboard(text, btn) {
+    await navigator.clipboard.writeText(text);
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast toast-${type} toast-show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('toast-show'), 3000);
+  }
+</script>
+</body>
+</html>

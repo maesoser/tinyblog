@@ -1,0 +1,56 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	// Worker name — also appears in the Cloudflare dashboard
+	"name": "tinyblog",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"compatibility_flags": [
+		"nodejs_compat_v2"
+	],
+	// Static assets served from ./public (admin HTML, CSS, etc.)
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	// D1 database — create with:
+	//   npx wrangler d1 create tinyblog-db
+	// Then paste the database_id printed by that command below.
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "tinyblog-db",
+			"database_id": "YOUR_D1_DATABASE_ID",
+			// Set to false (or remove) to use local D1 emulation during dev
+			"remote": true
+		}
+	],
+	// R2 bucket — create with:
+	//   npx wrangler r2 bucket create tinyblog-content
+	"r2_buckets": [
+		{
+			"bucket_name": "tinyblog-content",
+			"binding": "BUCKET",
+			// Set to false (or remove) to use local R2 emulation during dev
+			"remote": true
+		}
+	],
+	// Secrets — set via:
+	//   npx wrangler secret put ADMIN_SECRET
+	// ADMIN_SECRET protects /admin/* and /api/* when Cloudflare Access is not
+	// configured. For production consider replacing with Cloudflare Access
+	// (Zero Trust → Self-hosted application on /admin/* and /api/*).
+	"observability": {
+		"enabled": true
+	},
+	// Custom domain (optional) — remove this block to use the default
+	// *.workers.dev URL instead.
+	//
+	// Prerequisites:
+	//   1. Your domain must be on Cloudflare (proxied DNS).
+	//   2. Add a proxied DNS record for the subdomain:
+	//        Type AAAA  Name <subdomain>  Value 100::  Proxy ON
+	//
+	// "routes": [
+	//   { "pattern": "blog.yourdomain.com/*", "zone_name": "yourdomain.com" }
+	// ]
+}
