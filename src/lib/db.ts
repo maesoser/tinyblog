@@ -185,40 +185,39 @@ export async function dbGetAllTags(db: D1Database): Promise<TagRow[]> {
 /**
  * Upsert a list of tag names and associate them with a post.
  * Replaces any existing tag associations for that post.
+ *
+ * All statements are sent in a single db.batch() call so there is no window
+ * between clearing old associations and inserting new ones. D1 executes batch
+ * statements sequentially, so the tag upserts are guaranteed to complete before
+ * the post_tags inserts that reference them.
  */
 export async function dbSetPostTags(db: D1Database, postId: number, tagNames: string[]): Promise<void> {
-  // Remove existing associations
+  const trimmed = tagNames.map((n) => n.trim()).filter(Boolean);
+
+  // Always start by removing existing associations for this post
   const stmts: D1PreparedStatement[] = [
     db.prepare('DELETE FROM post_tags WHERE post_id = ?').bind(postId),
   ];
 
-  for (const name of tagNames) {
-    const trimmed = name.trim();
-    if (!trimmed) continue;
+  for (const name of trimmed) {
+    // Upsert the tag row
+    stmts.push(db.prepare('INSERT OR IGNORE INTO tags (name) VALUES (?)').bind(name));
+  }
 
-    // Upsert tag
-    stmts.push(db.prepare('INSERT OR IGNORE INTO tags (name) VALUES (?)').bind(trimmed));
+  for (const name of trimmed) {
+    // Insert association using a subquery — works within the same batch because
+    // D1 runs statements in order, so the tag row above already exists.
+    stmts.push(
+      db
+        .prepare(
+          `INSERT OR IGNORE INTO post_tags (post_id, tag_id)
+           SELECT ?, id FROM tags WHERE LOWER(name) = LOWER(?)`,
+        )
+        .bind(postId, name),
+    );
   }
 
   await db.batch(stmts);
-
-  // Now insert associations (need tag IDs, so do separately)
-  if (tagNames.length > 0) {
-    const assocStmts: D1PreparedStatement[] = [];
-    for (const name of tagNames) {
-      const trimmed = name.trim();
-      if (!trimmed) continue;
-      assocStmts.push(
-        db
-          .prepare(
-            `INSERT OR IGNORE INTO post_tags (post_id, tag_id)
-             SELECT ?, id FROM tags WHERE LOWER(name) = LOWER(?)`,
-          )
-          .bind(postId, trimmed),
-      );
-    }
-    if (assocStmts.length > 0) await db.batch(assocStmts);
-  }
 }
 
 /**

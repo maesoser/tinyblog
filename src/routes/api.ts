@@ -303,8 +303,23 @@ api.post('/assets/upload', async (c) => {
   const slug = (formData.get('slug') as string | null)?.trim();
   if (!slug) return c.json({ error: 'slug field is required' }, 400);
 
+  // Reject slugs containing path separators to prevent R2 path traversal
+  if (slug.includes('/') || slug.includes('..')) {
+    return c.json({ error: 'Invalid slug' }, 400);
+  }
+
+  // Verify the slug belongs to an actual post in the DB
+  const postForSlug = await c.env.DB.prepare('SELECT id FROM posts WHERE slug = ?').bind(slug).first();
+  if (!postForSlug) return c.json({ error: 'Invalid slug' }, 400);
+
   const file = formData.get('file') as File | null;
   if (!file) return c.json({ error: 'file field is required' }, 400);
+
+  // Reject files over 20 MB before buffering into memory
+  const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return c.json({ error: 'File too large (max 20 MB)' }, 413);
+  }
 
   // Sanitise filename
   const safeFilename = file.name

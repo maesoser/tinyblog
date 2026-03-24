@@ -40,7 +40,8 @@ async function getPageContext(bucket: R2Bucket, db: D1Database): Promise<PageCon
 // ── GET / — Blog index ─────────────────────────────────────────────────────
 
 pub.get('/', async (c) => {
-  const page = Math.max(1, Number(c.req.query('page') ?? '1') || 1);
+  const rawPage = parseInt(c.req.query('page') ?? '1', 10);
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
 
   const [posts, totalCount, ctx] = await Promise.all([
     dbGetAllPosts(c.env.DB, false, page),
