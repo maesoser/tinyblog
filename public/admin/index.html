@@ -192,7 +192,7 @@
         <td>${statusBadge}</td>
         <td class="muted">${date}</td>
         <td class="actions-cell">
-          <a href="/admin/editor.html?id=${p.id}" class="btn btn-sm btn-outline">Edit</a>
+          <button class="btn btn-sm btn-outline" onclick="location.href='/admin/editor.html?id=${p.id}'">Edit</button>
           ${p.status === 'draft'
             ? `<button class="btn btn-sm btn-primary" onclick="toggleStatus(${p.id},'publish')">Publish</button>`
             : `<button class="btn btn-sm btn-outline" onclick="toggleStatus(${p.id},'unpublish')">Unpublish</button>`}

@@ -200,9 +200,19 @@ html.dark        .icon-sun  { display:none; }
               border-color var(--duration-fast) var(--ease-out),
               background var(--duration-fast) var(--ease-out) !important;
 }
+
 .header-nav-admin:hover {
   border-color: var(--cf-orange) !important;
   background: var(--cf-orange-light);
+}
+
+.header-nav-link {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem !important;
+  transition: color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out) !important;
 }
 
 /* Main */
