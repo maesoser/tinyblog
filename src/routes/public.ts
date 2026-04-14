@@ -61,7 +61,15 @@ pub.get('/', async (c) => {
     customHeader: header,
     customFooter: footer,
   });
-  return c.html(html, 200, { 'Cache-Control': PAGE_CACHE });
+  return c.html(html, 200, {
+    'Cache-Control': PAGE_CACHE,
+    // RFC 8288 / RFC 9727 Link headers for agent discovery
+    'Link': [
+      '</.well-known/api-catalog>; rel="api-catalog"',
+      '</rss>; rel="alternate"; type="application/rss+xml"',
+      '</sitemap.xml>; rel="describedby"; type="application/xml"',
+    ].join(', '),
+  });
 });
 
 // ── GET /tags/:tag — Filtered post list ────────────────────────────────────
