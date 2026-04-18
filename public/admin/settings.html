@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tinyblog — Settings</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css" />
   <!-- EasyMDE for the About Me editor -->
   <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css" />
@@ -173,6 +175,14 @@
   </main>
 </div>
 
+<!-- Cloudflare Access error modal -->
+<div class="modal-backdrop" id="accessErrorModal" hidden>
+  <div class="modal">
+    <h2 class="modal-title">Access Denied</h2>
+    <p class="modal-body" id="accessErrorMsg"></p>
+  </div>
+</div>
+
 <script>
   // ── Theme toggle ──────────────────────────────────────────────────────────
   function applyThemeToggle() {
@@ -182,10 +192,10 @@
   document.getElementById('themeToggle').addEventListener('click', applyThemeToggle);
   document.getElementById('mobileThemeToggle').addEventListener('click', applyThemeToggle);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
-  function authHeaders(extra = {}) {
-    const secret = localStorage.getItem('adminSecret') || '';
-    return secret ? { 'Authorization': `Bearer ${secret}`, ...extra } : { ...extra };
+  // ── Cloudflare Access error modal ─────────────────────────────────────────
+  function showAccessError(message) {
+    document.getElementById('accessErrorMsg').textContent = message;
+    document.getElementById('accessErrorModal').hidden = false;
   }
 
   // ── Error helper ──────────────────────────────────────────────────────────
@@ -195,12 +205,23 @@
     try { return JSON.parse(text); } catch { return { error: `HTTP ${res.status}` }; }
   }
 
+  // Fetch wrapper that intercepts 403 and shows the Access error modal.
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    if (res.status === 403) {
+      const err = await parseErrorResponse(res);
+      showAccessError(err.error || 'Access denied.');
+      return res;
+    }
+    return res;
+  }
+
   // ── Default templates ─────────────────────────────────────────────────────
   const DEFAULT_HEADER = `<div class="header-inner container">
   <a href="/" class="site-logo">tinyblog</a>
   <nav class="header-nav">
     <a href="/" class="header-nav-link">Posts</a>
-    <a href="/about"  class="header-nav-link">About</a>
+    <a href="/about" class="header-nav-link">About</a>
     <a href="/admin/" class="header-nav-admin">Admin</a>
   </nav>
 </div>`;
@@ -228,8 +249,8 @@
   // ── Load existing settings ─────────────────────────────────────────────────
   (async () => {
     const [templatesRes, siteConfigRes] = await Promise.all([
-      fetch('/api/templates', { headers: authHeaders() }),
-      fetch('/api/site-config', { headers: authHeaders() }),
+      apiFetch('/api/templates'),
+      apiFetch('/api/site-config'),
     ]);
 
     if (templatesRes.ok) {
@@ -269,14 +290,14 @@
     const site_url     = document.getElementById('siteUrlInput').value.trim().replace(/\/$/, '');
 
     const [templatesRes, siteConfigRes] = await Promise.all([
-      fetch('/api/templates', {
+      apiFetch('/api/templates', {
         method: 'PUT',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ header, footer, aboutMd }),
       }),
-      fetch('/api/site-config', {
+      apiFetch('/api/site-config', {
         method: 'PUT',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           blog_name:    blog_name    || undefined,
           blog_tagline: blog_tagline || undefined,

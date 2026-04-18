@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tinyblog — Editor</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css" />
   <!-- EasyMDE -->
   <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css" />
@@ -153,6 +155,14 @@
   </main>
 </div>
 
+<!-- Cloudflare Access error modal -->
+<div class="modal-backdrop" id="accessErrorModal" hidden>
+  <div class="modal">
+    <h2 class="modal-title">Access Denied</h2>
+    <p class="modal-body" id="accessErrorMsg"></p>
+  </div>
+</div>
+
 <script>
   // ── Theme toggle ──────────────────────────────────────────────────────────
   function applyThemeToggle() {
@@ -162,10 +172,10 @@
   document.getElementById('themeToggle').addEventListener('click', applyThemeToggle);
   document.getElementById('mobileThemeToggle').addEventListener('click', applyThemeToggle);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
-  function authHeaders(extra = {}) {
-    const secret = localStorage.getItem('adminSecret') || '';
-    return secret ? { 'Authorization': `Bearer ${secret}`, ...extra } : { ...extra };
+  // ── Cloudflare Access error modal ─────────────────────────────────────────
+  function showAccessError(message) {
+    document.getElementById('accessErrorMsg').textContent = message;
+    document.getElementById('accessErrorModal').hidden = false;
   }
 
   // ── Error helper ──────────────────────────────────────────────────────────
@@ -173,6 +183,17 @@
     const text = await res.text().catch(() => '');
     console.error(`[tinyblog] API error ${res.status} ${res.url}:`, text);
     try { return JSON.parse(text); } catch { return { error: `HTTP ${res.status}` }; }
+  }
+
+  // Fetch wrapper that intercepts 403 and shows the Access error modal.
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    if (res.status === 403) {
+      const err = await parseErrorResponse(res);
+      showAccessError(err.error || 'Access denied.');
+      return res; // caller can still check res.ok (it will be false)
+    }
+    return res;
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -244,14 +265,14 @@
   }
 
   // ── Sidebar logo from site config ─────────────────────────────────────────
-  fetch('/api/site-config', { headers: authHeaders() })
+  apiFetch('/api/site-config')
     .then(r => r.ok ? r.json() : null)
     .then(cfg => { if (cfg?.blog_name) document.getElementById('sidebarLogo').textContent = cfg.blog_name; })
     .catch(() => {});
 
   // ── Load post if editing ──────────────────────────────────────────────────
   async function loadPost(id) {
-    const res = await fetch(`/api/posts/${id}`, { headers: authHeaders() });
+    const res = await apiFetch(`/api/posts/${id}`);
     if (!res.ok) { showToast('Failed to load post', 'error'); return; }
     const p = await res.json();
 
@@ -283,7 +304,7 @@
   }
 
   async function loadAssets(id) {
-    const res = await fetch(`/api/posts/${id}/assets`, { headers: authHeaders() });
+    const res = await apiFetch(`/api/posts/${id}/assets`);
     if (!res.ok) return; // non-fatal — asset list just stays empty
     const { assets } = await res.json();
     for (const asset of assets) {
@@ -340,9 +361,9 @@
       if (slug) body.slug = slug;
       if (intentStatus === 'published') body.status = 'published';
 
-      res = await fetch(`/api/posts/${postId}`, {
+      res = await apiFetch(`/api/posts/${postId}`, {
         method: 'PUT',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
     } else {
@@ -350,9 +371,9 @@
       const body = { title, author, excerpt: excerpt || undefined, status: intentStatus, markdown, tags };
       if (slug) body.slug = slug;
 
-      res = await fetch('/api/posts', {
+      res = await apiFetch('/api/posts', {
         method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
     }
@@ -418,7 +439,7 @@
       fd.append('slug', slug);
       fd.append('file', file);
 
-      const res = await fetch('/api/assets/upload', { method: 'POST', headers: authHeaders(), body: fd });
+      const res = await apiFetch('/api/assets/upload', { method: 'POST', body: fd });
       if (!res.ok) {
         li.textContent = `✗ ${file.name} — upload failed`;
         li.className = 'asset-item asset-error';

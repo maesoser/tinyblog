@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tinyblog — Admin</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css" />
   <script>
     (function(){
@@ -97,6 +99,14 @@
   </main>
 </div>
 
+<!-- Cloudflare Access error modal -->
+<div class="modal-backdrop" id="accessErrorModal" hidden>
+  <div class="modal">
+    <h2 class="modal-title">Access Denied</h2>
+    <p class="modal-body" id="accessErrorMsg"></p>
+  </div>
+</div>
+
 <!-- Delete confirmation modal -->
 <div class="modal-backdrop" id="deleteModal" hidden>
   <div class="modal">
@@ -118,17 +128,18 @@
   document.getElementById('themeToggle').addEventListener('click', applyThemeToggle);
   document.getElementById('mobileThemeToggle').addEventListener('click', applyThemeToggle);
 
+  // ── Cloudflare Access error modal ─────────────────────────────────────────
+  function showAccessError(message) {
+    document.getElementById('accessErrorMsg').textContent = message;
+    document.getElementById('accessErrorModal').hidden = false;
+  }
+
   // ── State ─────────────────────────────────────────────────────────────────
   let allPosts = [];
   let currentFilter = 'all';
   let pendingDeleteId = null;
 
   // ── API helpers ───────────────────────────────────────────────────────────
-  function authHeaders() {
-    const secret = localStorage.getItem('adminSecret') || '';
-    return secret ? { 'Authorization': `Bearer ${secret}` } : {};
-  }
-
   async function parseErrorResponse(res) {
     const text = await res.text().catch(() => '');
     console.error(`[tinyblog] API error ${res.status} ${res.url}:`, text);
@@ -136,20 +147,13 @@
   }
 
   async function fetchPosts() {
-    const res = await fetch('/api/posts', { headers: authHeaders() });
-    if (res.status === 401) {
-      promptSecret();
+    const res = await fetch('/api/posts');
+    if (res.status === 403) {
+      const err = await parseErrorResponse(res);
+      showAccessError(err.error || 'Access denied.');
       return [];
     }
     return res.ok ? res.json() : [];
-  }
-
-  function promptSecret() {
-    const s = prompt('Enter admin secret (stored only in this browser session):');
-    if (s) {
-      localStorage.setItem('adminSecret', s);
-      location.reload();
-    }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -209,7 +213,6 @@
   async function toggleStatus(id, action) {
     const res = await fetch(`/api/posts/${id}/${action}`, {
       method: 'POST',
-      headers: authHeaders(),
     });
     if (res.ok) {
       allPosts = await fetchPosts();
@@ -232,7 +235,7 @@
 
   document.getElementById('confirmDelete').addEventListener('click', async () => {
     if (!pendingDeleteId) return;
-    const res = await fetch(`/api/posts/${pendingDeleteId}`, { method: 'DELETE', headers: authHeaders() });
+    const res = await fetch(`/api/posts/${pendingDeleteId}`, { method: 'DELETE' });
     document.getElementById('deleteModal').hidden = true;
     pendingDeleteId = null;
     if (!res.ok) {
@@ -267,7 +270,7 @@
     // Load posts and site config in parallel
     [allPosts] = await Promise.all([
       fetchPosts(),
-      fetch('/api/site-config', { headers: authHeaders() })
+      fetch('/api/site-config')
         .then(r => r.ok ? r.json() : null)
         .then(cfg => { if (cfg?.blog_name) document.getElementById('sidebarLogo').textContent = cfg.blog_name; })
         .catch(() => {}),

@@ -41,6 +41,8 @@ export function publicShell(opts: {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escHtml(title)}</title>${metaDescription}${ogTags}
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="alternate" type="application/rss+xml" title="${escHtml(blogName)} RSS Feed" href="/rss" />
   <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
   <link rel="stylesheet" href="/style.css" />
@@ -82,8 +84,8 @@ export function defaultHeader(blogName: string): string {
     <div class="header-inner container">
       <a href="/" class="site-logo">${escHtml(blogName)}</a>
       <nav class="header-nav">
-        <a href="/">Posts</a>
-        <a href="/about">About</a>
+        <a href="/" class="header-nav-link">Posts</a>
+        <a href="/about" class="header-nav-link">About</a>
         <a href="/admin/" class="header-nav-admin">Admin</a>
       </nav>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
