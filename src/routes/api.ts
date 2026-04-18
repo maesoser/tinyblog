@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Env, CreatePostBody, UpdatePostBody, TemplatesBody, SiteConfigBody } from '../types.js';
 import { r2Keys } from '../types.js';
 import {
@@ -22,21 +23,46 @@ import { buildRssFeed } from '../lib/templates.js';
 const api = new Hono<{ Bindings: Env }>();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth middleware — validates ADMIN_SECRET header
-// In production replace with Cloudflare Access (no code needed).
+// Auth middleware — validates Cloudflare Access JWT (Cf-Access-Jwt-Assertion)
+// Requires CF_TEAM_NAME and CF_POLICY_AUD to be set as Worker secrets:
+//   npx wrangler secret put CF_TEAM_NAME   (e.g. "yourteam")
+//   npx wrangler secret put CF_POLICY_AUD
 // ─────────────────────────────────────────────────────────────────────────────
 
 api.use('*', async (c, next) => {
-  const secret = c.env.ADMIN_SECRET;
-  // If no secret is configured, allow through (useful for first-time local dev)
-  if (!secret) return next();
+  const teamName = c.env.CF_TEAM_NAME;
+  const audience = c.env.CF_POLICY_AUD;
 
-  const authHeader = c.req.header('Authorization') ?? '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-
-  if (token !== secret) {
-    return c.json({ error: 'Unauthorized' }, 401);
+  // Guard: Access is not configured — refuse rather than silently allow through
+  if (!teamName || !audience) {
+    return c.json({
+      error: 'Cloudflare Access is not configured. Set CF_TEAM_NAME and CF_POLICY_AUD secrets.',
+    }, 403);
   }
+
+  const teamDomain = `https://${teamName}.cloudflareaccess.com`;
+
+  const token = c.req.header('Cf-Access-Jwt-Assertion');
+
+  if (!token) {
+    return c.json({
+      error: 'Missing Cf-Access-Jwt-Assertion header. Cloudflare Access policies do not appear to be configured for this endpoint.',
+    }, 403);
+  }
+
+  try {
+    const JWKS = createRemoteJWKSet(
+      new URL(`${teamDomain}/cdn-cgi/access/certs`),
+    );
+    await jwtVerify(token, JWKS, {
+      issuer:   teamDomain,
+      audience: audience,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return c.json({ error: `Invalid Cloudflare Access token: ${message}` }, 403);
+  }
+
   return next();
 });
 

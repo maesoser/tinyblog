@@ -2,8 +2,18 @@ export interface Env {
   DB: D1Database;
   BUCKET: R2Bucket;
   ASSETS: Fetcher;
-  /** Secret for admin auth (set via: npx wrangler secret put ADMIN_SECRET) */
-  ADMIN_SECRET: string;
+  /**
+   * Cloudflare Access team name — the subdomain part only, e.g. "yourteam"
+   * (the full URL https://yourteam.cloudflareaccess.com is assembled in code)
+   * Set via: npx wrangler secret put CF_TEAM_NAME
+   */
+  CF_TEAM_NAME: string;
+  /**
+   * Cloudflare Access Application Audience (AUD) tag.
+   * Found in Zero Trust → Access → Applications → your app → overview.
+   * Set via: npx wrangler secret put CF_POLICY_AUD
+   */
+  CF_POLICY_AUD: string;
 }
 
 // ── D1 row shapes ──────────────────────────────────────────────────────────

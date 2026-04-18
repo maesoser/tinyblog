@@ -1140,9 +1140,7 @@ html.dark .editor-wrapper .CodeMirror-cursor {
   .admin-table th:nth-child(2),
   .admin-table td:nth-child(2),
   .admin-table th:nth-child(4),
-  .admin-table td:nth-child(4),
-  .admin-table th:nth-child(5),
-  .admin-table td:nth-child(5) { display: none; }
+  .admin-table td:nth-child(4) { display: none; }
 
   .actions-cell      { flex-direction: column; align-items: stretch; gap: 4px; }
   .actions-cell .btn { text-align: center; justify-content: center; }

@@ -20,6 +20,51 @@ app.use('/api/*', cors({
   maxAge: 86400,
 }));
 
+// ── Admin static files — guarded by Cloudflare Access header check ─────────
+// We intercept /admin/* in Hono before the Assets binding can serve them.
+// If the Cf-Access-Jwt-Assertion header is absent, Cloudflare Access is not
+// sitting in front of this route — return a clear HTML error page.
+// Full JWT verification is handled by the /api/* middleware; here we only
+// check header presence so we can surface a helpful error for direct access.
+
+app.use('/admin/*', async (c, next) => {
+  const token = c.req.header('Cf-Access-Jwt-Assertion');
+  if (!token) {
+    return c.html(/* html */`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Access Denied</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 540px; margin: 10vh auto; padding: 0 1.5rem; color: #111; }
+    h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    p  { line-height: 1.6; color: #444; }
+    code { background: #f3f3f3; padding: 0.1em 0.4em; border-radius: 3px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>Access Denied</h1>
+  <p>
+    The <code>Cf-Access-Jwt-Assertion</code> header is missing.
+    Cloudflare Access policies do not appear to be configured for this application.
+  </p>
+  <p>
+    To access the admin panel, configure a Cloudflare Access Application that
+    protects this domain, then visit this page through the Access-secured URL.
+  </p>
+</body>
+</html>`, 403);
+  }
+  return next();
+});
+
+// For /admin/* requests that pass the header check, proxy through to the
+// Assets binding so Wrangler serves the correct static file.
+app.get('/admin/*', async (c) => {
+  return c.env.ASSETS.fetch(c.req.raw);
+});
+
 // ── API routes ─────────────────────────────────────────────────────────────
 
 app.route('/api', apiRouter);
@@ -27,11 +72,6 @@ app.route('/api', apiRouter);
 // ── Public blog routes ─────────────────────────────────────────────────────
 
 app.route('/', publicRouter);
-
-// ── Admin static files — served from ./public via Assets binding ───────────
-// Requests to /admin/* that are NOT matched above fall through to the Assets
-// binding automatically (wrangler handles this with "assets.not_found_handling").
-// No extra code needed here.
 
 // ── 404 fallback ───────────────────────────────────────────────────────────
 
