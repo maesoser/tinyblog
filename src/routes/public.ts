@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Env, SiteConfig } from '../types.js';
-import { dbGetAllPosts, dbGetPostBySlug, dbGetPostsByTag, dbGetSiteConfig, dbCountPublishedPosts, PAGE_SIZE } from '../lib/db.js';
+import { dbGetAllPosts, dbGetAllPublishedPosts, dbGetPostBySlug, dbGetPostsByTag, dbGetSiteConfig, dbCountPublishedPosts, PAGE_SIZE } from '../lib/db.js';
 import { r2GetText, r2PutText } from '../lib/r2.js';
 import {
   publicShell,
@@ -184,7 +184,7 @@ pub.get('/rss', async (c) => {
   // Slow path: build on-demand on the first request (before cache exists).
   // Use the request origin as a fallback when site_url is not yet configured.
   const [posts, siteConfig] = await Promise.all([
-    dbGetAllPosts(c.env.DB, false),
+    dbGetAllPublishedPosts(c.env.DB),
     dbGetSiteConfig(c.env.DB),
   ]);
 
@@ -219,7 +219,7 @@ pub.get('/rss', async (c) => {
 
 pub.get('/sitemap.xml', async (c) => {
   const [posts, siteConfig] = await Promise.all([
-    dbGetAllPosts(c.env.DB, false), // all published, no pagination
+    dbGetAllPublishedPosts(c.env.DB),
     dbGetSiteConfig(c.env.DB),
   ]);
 

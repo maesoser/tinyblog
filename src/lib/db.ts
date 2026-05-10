@@ -51,6 +51,27 @@ export async function dbGetAllPosts(
 }
 
 /**
+ * Fetch ALL published posts without pagination — used by RSS and sitemap
+ * where truncating to 10 would silently drop posts.
+ * @param db D1 database binding
+ */
+export async function dbGetAllPublishedPosts(db: D1Database): Promise<PostWithTags[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT p.*, GROUP_CONCAT(t.name) AS tag_names
+       FROM posts p
+       LEFT JOIN post_tags pt ON pt.post_id = p.id
+       LEFT JOIN tags t ON t.id = pt.tag_id
+       WHERE p.status = 'published'
+       GROUP BY p.id
+       ORDER BY COALESCE(p.published_at, p.created_at) DESC`,
+    )
+    .all<PostRow & { tag_names: string | null }>();
+
+  return results.map(normalisePost);
+}
+
+/**
  * Count published posts (for pagination).
  * @param db D1 database binding
  */
@@ -139,12 +160,17 @@ export async function dbCreatePost(
   return result.meta.last_row_id as number;
 }
 
+/** Allowlisted column names for dbUpdatePost — prevents SQL injection via dynamic keys. */
+const UPDATABLE_POST_COLUMNS = new Set(['title', 'slug', 'author', 'excerpt', 'status']);
+
 export async function dbUpdatePost(
   db: D1Database,
   id: number,
   data: Partial<{ title: string; slug: string; author: string; excerpt: string; status: string }>,
 ): Promise<void> {
-  const fields = Object.keys(data) as Array<keyof typeof data>;
+  const fields = (Object.keys(data) as Array<keyof typeof data>).filter((f) =>
+    UPDATABLE_POST_COLUMNS.has(f),
+  );
   if (fields.length === 0) return;
 
   const setClauses = [...fields.map((f) => `${f} = ?`), 'updated_at = CURRENT_TIMESTAMP'].join(', ');

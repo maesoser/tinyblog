@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { jwtVerify } from 'jose';
 import type { Env } from './types.js';
 import { publicRouter } from './routes/public.js';
-import { apiRouter } from './routes/api.js';
+import { apiRouter, getJwks } from './routes/api.js';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -11,26 +12,27 @@ const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', logger());
 
-// Allow cross-origin requests to the API (useful when running admin from
-// a different origin during development).
+// Allow cross-origin requests to the API from the same site only.
+// Cf-Access-Jwt-Assertion is listed so browser preflight passes when Access
+// injects the header. Authorization is removed — it is no longer used.
 app.use('/api/*', cors({
-  origin: '*',
+  origin: (origin) => origin, // echo the request origin (same-site in practice; Access enforces identity)
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
+  allowHeaders: ['Content-Type', 'Cf-Access-Jwt-Assertion'],
   maxAge: 86400,
 }));
 
-// ── Admin static files — guarded by Cloudflare Access header check ─────────
-// We intercept /admin/* in Hono before the Assets binding can serve them.
-// If the Cf-Access-Jwt-Assertion header is absent, Cloudflare Access is not
-// sitting in front of this route — return a clear HTML error page.
-// Full JWT verification is handled by the /api/* middleware; here we only
-// check header presence so we can surface a helpful error for direct access.
+// ── Admin static files — guarded by full Cloudflare Access JWT verification ─
+// We intercept /admin/* in Hono before the Assets binding can serve them and
+// perform the same full jwtVerify used by the API middleware. Checking only
+// header presence is insufficient — any forged or expired string would pass.
 
 app.use('/admin/*', async (c, next) => {
-  const token = c.req.header('Cf-Access-Jwt-Assertion');
-  if (!token) {
-    return c.html(/* html */`<!DOCTYPE html>
+  const teamName = c.env.CF_TEAM_NAME;
+  const audience = c.env.CF_POLICY_AUD;
+
+  const deny = (detail: string) =>
+    c.html(/* html */`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -45,17 +47,33 @@ app.use('/admin/*', async (c, next) => {
 </head>
 <body>
   <h1>Access Denied</h1>
-  <p>
-    The <code>Cf-Access-Jwt-Assertion</code> header is missing.
-    Cloudflare Access policies do not appear to be configured for this application.
-  </p>
+  <p>${detail}</p>
   <p>
     To access the admin panel, configure a Cloudflare Access Application that
     protects this domain, then visit this page through the Access-secured URL.
   </p>
 </body>
 </html>`, 403);
+
+  if (!teamName || !audience) {
+    return deny('Cloudflare Access is not configured. Set <code>CF_TEAM_NAME</code> and <code>CF_POLICY_AUD</code> secrets.');
   }
+
+  const token = c.req.header('Cf-Access-Jwt-Assertion');
+  if (!token) {
+    return deny('The <code>Cf-Access-Jwt-Assertion</code> header is missing. Cloudflare Access policies do not appear to be configured for this application.');
+  }
+
+  const teamDomain = `https://${teamName}.cloudflareaccess.com`;
+  try {
+    await jwtVerify(token, getJwks(teamDomain), {
+      issuer:   teamDomain,
+      audience: audience,
+    });
+  } catch {
+    return deny('The Cloudflare Access token is invalid or has expired. Please re-authenticate via Cloudflare Access.');
+  }
+
   return next();
 });
 

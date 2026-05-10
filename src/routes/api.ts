@@ -4,6 +4,7 @@ import type { Env, CreatePostBody, UpdatePostBody, TemplatesBody, SiteConfigBody
 import { r2Keys } from '../types.js';
 import {
   dbGetAllPosts,
+  dbGetAllPublishedPosts,
   dbGetPostById,
   dbCreatePost,
   dbUpdatePost,
@@ -21,6 +22,27 @@ import { slugify } from '../lib/slugify.js';
 import { buildRssFeed } from '../lib/templates.js';
 
 const api = new Hono<{ Bindings: Env }>();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JWKS cache — keyed by team domain so the remote key set (and its internal
+// key cache) is reused across requests within the same isolate, avoiding a
+// fresh HTTPS fetch to cloudflareaccess.com on every authenticated call.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+
+/**
+ * Return (or create and cache) a RemoteJWKSet for the given team domain.
+ * @param teamDomain  e.g. "https://yourteam.cloudflareaccess.com"
+ */
+function getJwks(teamDomain: string): ReturnType<typeof createRemoteJWKSet> {
+  let jwks = jwksCache.get(teamDomain);
+  if (!jwks) {
+    jwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
+    jwksCache.set(teamDomain, jwks);
+  }
+  return jwks;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth middleware — validates Cloudflare Access JWT (Cf-Access-Jwt-Assertion)
@@ -51,10 +73,7 @@ api.use('*', async (c, next) => {
   }
 
   try {
-    const JWKS = createRemoteJWKSet(
-      new URL(`${teamDomain}/cdn-cgi/access/certs`),
-    );
-    await jwtVerify(token, JWKS, {
+    await jwtVerify(token, getJwks(teamDomain), {
       issuer:   teamDomain,
       audience: audience,
     });
@@ -213,7 +232,7 @@ api.put('/posts/:id', async (c) => {
     await dbPublishPost(c.env.DB, id);
   }
 
-  // If title changed → rename R2 keys
+  // If slug changed → rename R2 content keys AND migrate all uploaded assets
   if (newSlug !== post.slug) {
     const [md, html] = await Promise.all([
       r2GetText(c.env.BUCKET, r2Keys.contentMd(post.slug)),
@@ -228,6 +247,25 @@ api.put('/posts/:id', async (c) => {
         : Promise.resolve(),
       r2Delete(c.env.BUCKET, r2Keys.contentMd(post.slug), r2Keys.contentHtml(post.slug)),
     ]);
+
+    // Migrate uploaded assets: copy each assets/<old-slug>/<file> → assets/<new-slug>/<file>
+    // then delete the originals so images don't 404 after a rename.
+    const assetKeys = await r2ListKeys(c.env.BUCKET, `assets/${post.slug}/`);
+    if (assetKeys.length > 0) {
+      await Promise.all(
+        assetKeys.map(async (oldKey) => {
+          const filename = oldKey.slice(`assets/${post.slug}/`.length);
+          const newKey = `assets/${newSlug}/${filename}`;
+          const obj = await c.env.BUCKET.get(oldKey);
+          if (obj) {
+            await c.env.BUCKET.put(newKey, obj.body, {
+              httpMetadata: obj.httpMetadata,
+            });
+          }
+        }),
+      );
+      await r2Delete(c.env.BUCKET, ...assetKeys);
+    }
   }
 
   // If markdown updated → re-render and store
@@ -445,7 +483,7 @@ api.put('/site-config', async (c) => {
 async function invalidateRssCache(env: Env): Promise<void> {
   try {
     const [posts, siteConfig] = await Promise.all([
-      dbGetAllPosts(env.DB, false), // all published, no pagination (RSS needs all)
+      dbGetAllPublishedPosts(env.DB),
       dbGetSiteConfig(env.DB),
     ]);
 
@@ -475,3 +513,4 @@ async function invalidateRssCache(env: Env): Promise<void> {
 
 export { api as apiRouter };
 export { invalidateRssCache };
+export { getJwks };
