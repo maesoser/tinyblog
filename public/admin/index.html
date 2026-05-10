@@ -196,11 +196,20 @@
         <td>${statusBadge}</td>
         <td class="muted">${date}</td>
         <td class="actions-cell">
-          <button class="btn btn-sm btn-outline" onclick="location.href='/admin/editor.html?id=${p.id}'">Edit</button>
+          <button class="btn btn-sm btn-outline" onclick="location.href='/admin/editor.html?id=${p.id}'" aria-label="Edit">
+            <!-- lucide: pencil -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
+          </button>
           ${p.status === 'draft'
             ? `<button class="btn btn-sm btn-primary" onclick="toggleStatus(${p.id},'publish')">Publish</button>`
-            : `<button class="btn btn-sm btn-outline" onclick="toggleStatus(${p.id},'unpublish')">Unpublish</button>`}
-          <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${p.id})">Delete</button>
+            : `<button class="btn btn-sm btn-outline" onclick="toggleStatus(${p.id},'unpublish')" aria-label="Unpublish">
+            <!-- lucide: eye-off -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+          </button>`}
+          <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${p.id})" aria-label="Delete">
+            <!-- lucide: trash-2 -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+          </button>
         </td>
       </tr>`;
   }
