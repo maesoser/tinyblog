@@ -394,9 +394,10 @@ html.dark        .icon-sun  { display:none; }
 .prose th { background: var(--cf-bg-300); font-weight: 600; }
 .prose tr:nth-child(even) { background: var(--cf-bg-200); }
 .prose img {
+  display: block;
+  margin: 1em auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--cf-border);
-  margin: 1em 0;
 }
 .prose a { color: var(--cf-orange); }
 .prose code {
