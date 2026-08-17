@@ -10,6 +10,10 @@ I wanted a simple blog with a clean, minimalistic reading experience and a prope
 
 The result is a single Cloudflare Worker that handles everything: the public blog, the admin interface, and the API. No servers to manage, no Docker containers, no databases to babysit. Storage is split between D1 (metadata) and R2 (content), both managed by Cloudflare.
 
+## Demo
+
+[BLOG](https://blog.maesoser.me/)
+
 ---
 
 ## Features
