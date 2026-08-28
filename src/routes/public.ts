@@ -41,6 +41,7 @@ async function getPageContext(bucket: R2Bucket, db: D1Database): Promise<PageCon
 // ── GET / — Landing page (hero + about + last 3 posts) ────────────────────
 
 pub.get('/', async (c) => {
+  const requestOrigin = new URL(c.req.url).origin;
   const [recentPosts, aboutHtml, ctx] = await Promise.all([
     dbGetAllPosts(c.env.DB, false, 1),
     r2GetText(c.env.BUCKET, r2Keys.aboutHtml()),
@@ -59,6 +60,8 @@ pub.get('/', async (c) => {
     customHeader: header,
     customFooter: footer,
     bodyClass: 'page-home',
+    requestOrigin,
+    siteUrl: siteConfig.site_url,
   });
   return c.html(html, 200, {
     'Cache-Control': PAGE_CACHE,
@@ -74,6 +77,7 @@ pub.get('/', async (c) => {
 // ── GET /posts — Paginated post archive ────────────────────────────────────
 
 pub.get('/posts', async (c) => {
+  const requestOrigin = new URL(c.req.url).origin;
   const rawPage = parseInt(c.req.query('page') ?? '1', 10);
   const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
 
@@ -94,6 +98,8 @@ pub.get('/posts', async (c) => {
     bodyContent: body,
     customHeader: header,
     customFooter: footer,
+    requestOrigin,
+    siteUrl: siteConfig.site_url,
   });
   return c.html(html, 200, { 'Cache-Control': PAGE_CACHE });
 });
@@ -101,6 +107,7 @@ pub.get('/posts', async (c) => {
 // ── GET /tags/:tag — Filtered post list ────────────────────────────────────
 
 pub.get('/tags/:tag', async (c) => {
+  const requestOrigin = new URL(c.req.url).origin;
   const tag = decodeURIComponent(c.req.param('tag'));
 
   const [posts, ctx] = await Promise.all([
@@ -116,6 +123,8 @@ pub.get('/tags/:tag', async (c) => {
     bodyContent: body,
     customHeader: header,
     customFooter: footer,
+    requestOrigin,
+    siteUrl: siteConfig.site_url,
   });
   return c.html(html, 200, { 'Cache-Control': PAGE_CACHE });
 });
@@ -145,7 +154,7 @@ pub.get('/posts/:slug{.+\\.md}', async (c) => {
 
 pub.get('/posts/:slug', async (c) => {
   const slug = c.req.param('slug');
-  const baseUrl = new URL(c.req.url).origin;
+  const requestOrigin = new URL(c.req.url).origin;
 
   const [post, bodyHtml, ctx] = await Promise.all([
     dbGetPostBySlug(c.env.DB, slug, true),
@@ -162,6 +171,8 @@ pub.get('/posts/:slug', async (c) => {
         bodyContent: '<div class="container"><h1>404 — Post not found</h1><p><a href="/">← Back to all posts</a></p></div>',
         customHeader: header,
         customFooter: footer,
+        requestOrigin,
+        siteUrl: siteConfig.site_url,
       }),
       404,
     );
@@ -172,10 +183,12 @@ pub.get('/posts/:slug', async (c) => {
     title: `${post.title} — ${siteConfig.blog_name}`,
     blogName: siteConfig.blog_name,
     description: post.excerpt ?? undefined,
-    ogUrl: `${baseUrl}/posts/${encodeURIComponent(post.slug)}`,
+    ogUrl: `${requestOrigin}/posts/${encodeURIComponent(post.slug)}`,
     bodyContent: pageBody,
     customHeader: header,
     customFooter: footer,
+    requestOrigin,
+    siteUrl: siteConfig.site_url,
   });
   return c.html(html, 200, { 'Cache-Control': PAGE_CACHE });
 });
@@ -183,6 +196,7 @@ pub.get('/posts/:slug', async (c) => {
 // ── GET /about ────────────────────────────────────────────────────────────
 
 pub.get('/about', async (c) => {
+  const requestOrigin = new URL(c.req.url).origin;
   const [bodyHtml, ctx] = await Promise.all([
     r2GetText(c.env.BUCKET, r2Keys.aboutHtml()),
     getPageContext(c.env.BUCKET, c.env.DB),
@@ -197,6 +211,8 @@ pub.get('/about', async (c) => {
         bodyContent: '<div class="container"><h1>About</h1><p>This page hasn\'t been written yet. Check back soon.</p></div>',
         customHeader: header,
         customFooter: footer,
+        requestOrigin,
+        siteUrl: siteConfig.site_url,
       }),
       200,
     );
@@ -208,6 +224,8 @@ pub.get('/about', async (c) => {
     bodyContent: `<article class="post container"><h1 class="post-title" style="margin-bottom:32px">About</h1><div class="post-body prose">${bodyHtml}</div></article>`,
     customHeader: header,
     customFooter: footer,
+    requestOrigin,
+    siteUrl: siteConfig.site_url,
   });
   return c.html(html, 200, { 'Cache-Control': PAGE_CACHE });
 });

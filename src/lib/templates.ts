@@ -40,8 +40,14 @@ export function publicShell(opts: {
   customHeader: string;
   customFooter: string;
   bodyClass?: string;
+  /** Origin of the current request, e.g. "https://blog.maesoser.me". Used to
+   *  decide whether to show the Admin link in the default header. */
+  requestOrigin?: string;
+  /** Configured site_url from site_config. Admin link is hidden when the
+   *  request origin does not match this value. */
+  siteUrl?: string;
 }): string {
-  const { title, blogName, description, ogUrl, bodyContent, customHeader, customFooter, bodyClass } = opts;
+  const { title, blogName, description, ogUrl, bodyContent, customHeader, customFooter, bodyClass, requestOrigin, siteUrl } = opts;
 
   const metaDescription = description
     ? `\n  <meta name="description" content="${escHtml(description)}" />`
@@ -79,7 +85,7 @@ export function publicShell(opts: {
 <body${bodyClass ? ` class="${escHtml(bodyClass)}"` : ''}>
   <div class="site-wrapper">
     <header class="site-header">
-      ${customHeader || defaultHeader(blogName)}
+      ${customHeader || defaultHeader(blogName, isAdminHost(requestOrigin, siteUrl))}
     </header>
     <main class="site-main">
       ${bodyContent}
@@ -96,16 +102,30 @@ export function publicShell(opts: {
 // ── Default header / footer (fallback when R2 templates are empty) ─────────
 
 /**
- * @param blogName Blog name shown as the site logo text
+ * Returns true when the request origin matches the configured site_url,
+ * meaning the visitor is on the canonical domain and the Admin link should
+ * be shown. Falls back to showing Admin when site_url is not yet configured.
  */
-export function defaultHeader(blogName: string): string {
+function isAdminHost(requestOrigin: string | undefined, siteUrl: string | undefined): boolean {
+  if (!siteUrl) return true; // not configured yet — always show
+  if (!requestOrigin) return true; // unknown origin — safe default
+  // Normalise both to bare origins (strip trailing slash)
+  const normalise = (s: string) => s.replace(/\/$/, '').toLowerCase();
+  return normalise(requestOrigin) === normalise(siteUrl);
+}
+
+/**
+ * @param blogName  Blog name shown as the site logo text
+ * @param showAdmin Whether to render the Admin nav pill
+ */
+export function defaultHeader(blogName: string, showAdmin = true): string {
   return /* html */ `
     <div class="header-inner container">
       <a href="/" class="site-logo">${escHtml(blogName)}</a>
       <nav class="header-nav">
         <a href="/posts" class="header-nav-link">Posts</a>
         <a href="/about" class="header-nav-link">About</a>
-        <a href="/admin/" class="header-nav-admin">Admin</a>
+        ${showAdmin ? '<a href="/admin/" class="header-nav-admin">Admin</a>' : ''}
       </nav>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
         <svg class="icon-sun" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
