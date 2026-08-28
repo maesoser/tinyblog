@@ -234,7 +234,7 @@ export function renderHomepage(
   // ── About section ─────────────────────────────────────────────────────────
   const aboutSection = aboutHtml
     ? /* html */ `
-    <section class="home-about container">
+    <section class="home-about">
       <div class="home-about-content prose">
         ${aboutHtml}
       </div>
@@ -245,21 +245,17 @@ export function renderHomepage(
   const postItems = recentPosts
     .map(
       (p) => /* html */ `
-      <article class="post-card">
-        <div class="post-card-meta">
-          <time datetime="${p.published_at ?? p.created_at}">${formatDate(p.published_at ?? p.created_at)}</time>
-          ${p.tags.length ? `<span class="sep">·</span>${p.tags.map((t) => `<a href="/tags/${encodeURIComponent(t)}" class="tag">${escHtml(t)}</a>`).join('')}` : ''}
-        </div>
-        <h2 class="post-card-title">
+      <div class="home-post-row">
+        <time class="home-post-date" datetime="${p.published_at ?? p.created_at}">${formatDateShort(p.published_at ?? p.created_at)}</time>
+        <h2 class="home-post-title">
           <a href="/posts/${encodeURIComponent(p.slug)}">${escHtml(p.title)}</a>
         </h2>
-        ${p.excerpt ? `<p class="post-card-excerpt">${escHtml(p.excerpt)}</p>` : ''}
-      </article>`,
+      </div>`,
     )
     .join('\n');
 
   const postsSection = /* html */ `
-    <section class="home-posts container">
+    <section class="home-posts">
       <h2 class="home-posts-heading">Occasional blog posts</h2>
       <div class="home-post-list">
         ${postItems || '<p class="empty-state">No posts yet. Check back soon!</p>'}
@@ -268,7 +264,7 @@ export function renderHomepage(
     </section>`;
 
   return /* html */ `
-    <div class="home-hero container">
+    <div class="home-hero">
       <h1 class="home-blog-name">${escHtml(siteConfig.blog_name)}</h1>
       <p class="home-tagline">${escHtml(siteConfig.blog_tagline)}</p>
       <nav class="home-social-links" aria-label="Social links">
@@ -346,6 +342,18 @@ function formatDate(iso: string): string {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+/** Short date for home page post rows: "Aug 2026" */
+function formatDateShort(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
     });
   } catch {
     return iso;

@@ -5,21 +5,22 @@
 
 /* ── Custom properties (light mode) ──────────────────────────── */
 :root {
-  --cf-orange:       #FF4801;
-  --cf-orange-hover: #FF7038;
-  --cf-orange-light: rgba(255,72,1,0.10);
+  --cf-orange:       #D94D00;
+  --cf-orange-hover: #B84200;
+  --cf-orange-light: rgba(217,77,0,0.08);
 
-  --cf-text:         #521000;
-  --cf-text-muted:   rgba(82,16,0,0.60);
-  --cf-text-subtle:  rgba(82,16,0,0.38);
+  /* Near-black text — literary, not branded */
+  --cf-text:         #1a1a1a;
+  --cf-text-muted:   rgba(26,26,26,0.55);
+  --cf-text-subtle:  rgba(26,26,26,0.35);
 
-  --cf-bg-page:  #F5F1EB;
-  --cf-bg-100:   #FFFBF5;
-  --cf-bg-200:   #FFFDFB;
-  --cf-bg-300:   #FEF7ED;
+  --cf-bg-page:  #F7F4EF;
+  --cf-bg-100:   #F7F4EF;   /* header same as page — blends in */
+  --cf-bg-200:   #EEEAE3;
+  --cf-bg-300:   #E5E0D8;
 
-  --cf-border:       #EBD5C1;
-  --cf-border-light: rgba(235,213,193,0.50);
+  --cf-border:       rgba(26,26,26,0.12);
+  --cf-border-light: rgba(26,26,26,0.06);
 
   --cf-success:    #16A34A;
   --cf-success-bg: #DCF7E3;
@@ -28,7 +29,8 @@
   --cf-error:      #DC2626;
   --cf-error-bg:   #FEE2E2;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: "Georgia", "Palatino Linotype", Palatino, serif;
+  --font-ui:   -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
 
   --radius-sm:   4px;
@@ -50,20 +52,20 @@
 
 /* ── Dark mode ───────────────────────────────────────────────── */
 html.dark {
-  --cf-orange:       #F14602;
-  --cf-orange-hover: #FF6D33;
+  --cf-orange:       #E86030;
+  --cf-orange-hover: #FF7A48;
 
-  --cf-text:         #F0E3DE;
-  --cf-text-muted:   rgba(255,253,251,0.56);
-  --cf-text-subtle:  rgba(255,253,251,0.35);
+  --cf-text:         #E8E4DC;
+  --cf-text-muted:   rgba(232,228,220,0.55);
+  --cf-text-subtle:  rgba(232,228,220,0.35);
 
-  --cf-bg-page:  #0D0D0D;
-  --cf-bg-100:   #121212;
-  --cf-bg-200:   #191817;
-  --cf-bg-300:   #2A2927;
+  --cf-bg-page:  #111110;
+  --cf-bg-100:   #111110;   /* header blends with page in dark too */
+  --cf-bg-200:   #1C1B19;
+  --cf-bg-300:   #252420;
 
-  --cf-border:       rgba(240,227,222,0.13);
-  --cf-border-light: rgba(240,227,222,0.07);
+  --cf-border:       rgba(232,228,220,0.12);
+  --cf-border-light: rgba(232,228,220,0.06);
 
   --cf-success-bg: rgba(22,163,74,0.15);
   --cf-warning-bg: rgba(234,179,8,0.15);
@@ -84,12 +86,20 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 1.0625rem;
+  line-height: 1.75;
   color: var(--cf-text);
   background: var(--cf-bg-page);
   transition: background-color var(--duration-normal) var(--ease-out),
               color var(--duration-normal) var(--ease-out);
+}
+
+/* UI elements (header, nav, admin, buttons) use the system sans */
+.site-header, .site-footer, .header-nav, .btn,
+.admin-body, .tag, .pagination, .post-card-meta,
+.post-header-meta, .home-social-link, .home-posts-heading,
+.home-view-all, .footer-inner {
+  font-family: var(--font-ui);
 }
 
 a { color: var(--cf-orange); text-decoration: none; }
@@ -154,9 +164,9 @@ html.dark        .icon-sun  { display:none; }
   min-height: 100vh;
 }
 
-/* Header */
+/* Header — blends with page background, minimal visual weight */
 .site-header {
-  border-bottom: 1px solid var(--cf-border);
+  border-bottom: 1px solid var(--cf-border-light);
   background: var(--cf-bg-100);
   position: sticky;
   top: 0;
@@ -167,14 +177,15 @@ html.dark        .icon-sun  { display:none; }
   display: flex;
   align-items: center;
   gap: 16px;
-  height: 60px;
+  height: 48px;
 }
 
 .site-logo {
-  font-weight: 600;
-  font-size: 1.125rem;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 1rem;
   color: var(--cf-text);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   text-decoration: none;
 }
 .site-logo:hover { text-decoration: none; color: var(--cf-orange); }
@@ -274,8 +285,7 @@ html.dark        .icon-sun  { display:none; }
   box-shadow: var(--shadow-lg);
 }
 
-/* Corner brackets */
-.post-card::before, .post-card::after,
+/* Corner brackets — admin cards only */
 .admin-card::before, .admin-card::after {
   content: '';
   position: absolute;
@@ -285,8 +295,6 @@ html.dark        .icon-sun  { display:none; }
   border-radius: 1.5px;
   pointer-events: none;
 }
-.post-card::before  { top: -4px; left: -4px; }
-.post-card::after   { top: -4px; right: -4px; }
 
 .post-card-meta {
   display: flex;
@@ -351,9 +359,9 @@ html.dark        .icon-sun  { display:none; }
 }
 .post-title {
   font-size: 2.25rem;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   margin: 0;
 }
 
@@ -1158,7 +1166,6 @@ html.dark .editor-wrapper .CodeMirror-cursor {
   .post-list-header h1 { font-size: 1.25rem; }
   .post-card           { padding: 16px; }
   .site-main           { padding-block: 24px; }
-  .header-inner        { height: 48px; }
   .header-nav          { gap: 12px; }
   .header-nav a        { font-size: 0.8125rem; }
 
@@ -1184,30 +1191,41 @@ html.dark .editor-wrapper .CodeMirror-cursor {
 
 /* ── Homepage (landing page) ───────────────────────────────────────────────── */
 
+/* Narrower prose column shared by hero + about + home posts */
+.home-hero,
+.home-about,
+.home-posts {
+  max-width: 680px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
 .home-hero {
-  padding-block: 64px 48px;
+  padding-block: 24px 40px;
 }
 
 .home-blog-name {
-  font-size: 2.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--cf-text);
-  margin: 0 0 10px;
-  line-height: 1.1;
+  margin: 0 0 8px;
+  line-height: 1.15;
 }
 
 .home-tagline {
-  font-size: 1.125rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
   color: var(--cf-text-muted);
-  margin: 0 0 28px;
+  margin: 0 0 24px;
   line-height: 1.5;
 }
 
 .home-social-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1216,24 +1234,24 @@ html.dark .editor-wrapper .CodeMirror-cursor {
 .home-social-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  gap: 5px;
+  padding: 5px 12px;
   border-radius: 999px;
   border: 1px solid var(--cf-border);
-  background: var(--cf-bg-200);
+  background: transparent;
   color: var(--cf-text-muted);
-  font-size: 0.875rem;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
   font-weight: 500;
   text-decoration: none;
-  transition: border-color var(--cf-duration) var(--cf-ease),
-              color var(--cf-duration) var(--cf-ease),
-              background var(--cf-duration) var(--cf-ease);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out);
 }
 
 .home-social-link:hover {
   border-color: var(--cf-orange);
   color: var(--cf-orange);
-  background: var(--cf-orange-light);
+  text-decoration: none;
 }
 
 .home-social-link svg {
@@ -1242,54 +1260,93 @@ html.dark .editor-wrapper .CodeMirror-cursor {
 
 /* About section */
 .home-about {
-  padding-block: 40px;
-  border-top: 1px solid var(--cf-border);
-}
-
-.home-about-content {
-  max-width: 680px;
+  padding-block: 36px;
+  border-top: 1px solid var(--cf-border-light);
 }
 
 /* Recent posts section */
 .home-posts {
-  padding-block: 40px;
-  border-top: 1px solid var(--cf-border);
+  padding-block: 36px;
+  border-top: 1px solid var(--cf-border-light);
 }
 
 .home-posts-heading {
-  font-size: 1rem;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--cf-text-subtle);
   margin: 0 0 20px;
 }
 
+/* Plain text post rows — no cards */
 .home-post-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   margin-bottom: 24px;
+}
+
+.home-post-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--cf-border-light);
+}
+
+.home-post-row:first-child {
+  border-top: 1px solid var(--cf-border-light);
+}
+
+.home-post-date {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  color: var(--cf-text-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 100px;
+}
+
+.home-post-title {
+  font-size: 1rem;
+  font-weight: normal;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.home-post-title a {
+  color: var(--cf-text);
+  text-decoration: none;
+}
+
+.home-post-title a:hover {
+  color: var(--cf-orange);
+  text-decoration: none;
 }
 
 .home-view-all {
   display: inline-block;
-  font-size: 0.9375rem;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
   font-weight: 500;
-  color: var(--cf-orange);
+  color: var(--cf-text-muted);
   text-decoration: none;
-  transition: opacity var(--cf-duration) var(--cf-ease);
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .home-view-all:hover {
-  opacity: 0.75;
+  color: var(--cf-orange);
+  text-decoration: none;
 }
 
 /* Responsive adjustments for homepage */
 @media (max-width: 600px) {
-  .home-hero        { padding-block: 40px 32px; }
-  .home-blog-name   { font-size: 1.75rem; }
-  .home-tagline     { font-size: 1rem; }
+  .home-hero        { padding-block: 16px 28px; }
+  .home-blog-name   { font-size: 1.5rem; }
   .home-about,
-  .home-posts       { padding-block: 28px; }
+  .home-posts       { padding-block: 24px; }
+  .home-post-row    { flex-direction: column; gap: 2px; }
+  .home-post-date   { min-width: unset; }
 }
