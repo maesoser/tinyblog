@@ -39,8 +39,9 @@ export function publicShell(opts: {
   bodyContent: string;
   customHeader: string;
   customFooter: string;
+  bodyClass?: string;
 }): string {
-  const { title, blogName, description, ogUrl, bodyContent, customHeader, customFooter } = opts;
+  const { title, blogName, description, ogUrl, bodyContent, customHeader, customFooter, bodyClass } = opts;
 
   const metaDescription = description
     ? `\n  <meta name="description" content="${escHtml(description)}" />`
@@ -75,7 +76,7 @@ export function publicShell(opts: {
     })();
   </script>
 </head>
-<body>
+<body${bodyClass ? ` class="${escHtml(bodyClass)}"` : ''}>
   <div class="site-wrapper">
     <header class="site-header">
       ${customHeader || defaultHeader(blogName)}
@@ -256,7 +257,7 @@ export function renderHomepage(
 
   const postsSection = /* html */ `
     <section class="home-posts">
-      <h2 class="home-posts-heading">Occasional blog posts</h2>
+      <h2 class="home-posts-heading">Recent writing</h2>
       <div class="home-post-list">
         ${postItems || '<p class="empty-state">No posts yet. Check back soon!</p>'}
       </div>

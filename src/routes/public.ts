@@ -58,6 +58,7 @@ pub.get('/', async (c) => {
     bodyContent: body,
     customHeader: header,
     customFooter: footer,
+    bodyClass: 'page-home',
   });
   return c.html(html, 200, {
     'Cache-Control': PAGE_CACHE,

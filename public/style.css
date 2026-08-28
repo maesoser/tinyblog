@@ -1189,6 +1189,9 @@ html.dark .editor-wrapper .CodeMirror-cursor {
   .admin-table   { font-size: 0.8rem; }
 }
 
+/* Hide the header logo on the homepage — the hero h1 already shows the name */
+.page-home .site-logo { display: none; }
+
 /* ── Homepage (landing page) ───────────────────────────────────────────────── */
 
 /* Narrower prose column shared by hero + about + home posts */
