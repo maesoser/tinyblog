@@ -1181,3 +1181,115 @@ html.dark .editor-wrapper .CodeMirror-cursor {
   .btn           { padding: 8px 14px; font-size: 0.8125rem; }
   .admin-table   { font-size: 0.8rem; }
 }
+
+/* ── Homepage (landing page) ───────────────────────────────────────────────── */
+
+.home-hero {
+  padding-block: 64px 48px;
+}
+
+.home-blog-name {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cf-text);
+  margin: 0 0 10px;
+  line-height: 1.1;
+}
+
+.home-tagline {
+  font-size: 1.125rem;
+  color: var(--cf-text-muted);
+  margin: 0 0 28px;
+  line-height: 1.5;
+}
+
+.home-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--cf-border);
+  background: var(--cf-bg-200);
+  color: var(--cf-text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color var(--cf-duration) var(--cf-ease),
+              color var(--cf-duration) var(--cf-ease),
+              background var(--cf-duration) var(--cf-ease);
+}
+
+.home-social-link:hover {
+  border-color: var(--cf-orange);
+  color: var(--cf-orange);
+  background: var(--cf-orange-light);
+}
+
+.home-social-link svg {
+  flex-shrink: 0;
+}
+
+/* About section */
+.home-about {
+  padding-block: 40px;
+  border-top: 1px solid var(--cf-border);
+}
+
+.home-about-content {
+  max-width: 680px;
+}
+
+/* Recent posts section */
+.home-posts {
+  padding-block: 40px;
+  border-top: 1px solid var(--cf-border);
+}
+
+.home-posts-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cf-text-subtle);
+  margin: 0 0 20px;
+}
+
+.home-post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.home-view-all {
+  display: inline-block;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--cf-orange);
+  text-decoration: none;
+  transition: opacity var(--cf-duration) var(--cf-ease);
+}
+
+.home-view-all:hover {
+  opacity: 0.75;
+}
+
+/* Responsive adjustments for homepage */
+@media (max-width: 600px) {
+  .home-hero        { padding-block: 40px 32px; }
+  .home-blog-name   { font-size: 1.75rem; }
+  .home-tagline     { font-size: 1rem; }
+  .home-about,
+  .home-posts       { padding-block: 28px; }
+}

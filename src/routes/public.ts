@@ -4,6 +4,7 @@ import { dbGetAllPosts, dbGetAllPublishedPosts, dbGetPostBySlug, dbGetPostsByTag
 import { r2GetText, r2PutText } from '../lib/r2.js';
 import {
   publicShell,
+  renderHomepage,
   renderPostList,
   renderPostPage,
   buildRssFeed,
@@ -37,22 +38,19 @@ async function getPageContext(bucket: R2Bucket, db: D1Database): Promise<PageCon
   return { header: header ?? '', footer: footer ?? '', siteConfig };
 }
 
-// ── GET / — Blog index ─────────────────────────────────────────────────────
+// ── GET / — Landing page (hero + about + last 3 posts) ────────────────────
 
 pub.get('/', async (c) => {
-  const rawPage = parseInt(c.req.query('page') ?? '1', 10);
-  const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-
-  const [posts, totalCount, ctx] = await Promise.all([
-    dbGetAllPosts(c.env.DB, false, page),
-    dbCountPublishedPosts(c.env.DB),
+  const [recentPosts, aboutHtml, ctx] = await Promise.all([
+    dbGetAllPosts(c.env.DB, false, 1),
+    r2GetText(c.env.BUCKET, r2Keys.aboutHtml()),
     getPageContext(c.env.BUCKET, c.env.DB),
   ]);
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const { header, footer, siteConfig } = ctx;
+  const top3 = recentPosts.slice(0, 3);
 
-  const body = renderPostList(posts, undefined, { page, totalPages });
+  const body = renderHomepage(siteConfig, aboutHtml ?? '', top3);
   const html = publicShell({
     title: siteConfig.blog_name,
     blogName: siteConfig.blog_name,
@@ -70,6 +68,33 @@ pub.get('/', async (c) => {
       '</sitemap.xml>; rel="describedby"; type="application/xml"',
     ].join(', '),
   });
+});
+
+// ── GET /posts — Paginated post archive ────────────────────────────────────
+
+pub.get('/posts', async (c) => {
+  const rawPage = parseInt(c.req.query('page') ?? '1', 10);
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+
+  const [posts, totalCount, ctx] = await Promise.all([
+    dbGetAllPosts(c.env.DB, false, page),
+    dbCountPublishedPosts(c.env.DB),
+    getPageContext(c.env.BUCKET, c.env.DB),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const { header, footer, siteConfig } = ctx;
+
+  const body = renderPostList(posts, undefined, { page, totalPages });
+  const html = publicShell({
+    title: `Posts — ${siteConfig.blog_name}`,
+    blogName: siteConfig.blog_name,
+    description: siteConfig.blog_tagline,
+    bodyContent: body,
+    customHeader: header,
+    customFooter: footer,
+  });
+  return c.html(html, 200, { 'Cache-Control': PAGE_CACHE });
 });
 
 // ── GET /tags/:tag — Filtered post list ────────────────────────────────────
@@ -92,6 +117,27 @@ pub.get('/tags/:tag', async (c) => {
     customFooter: footer,
   });
   return c.html(html, 200, { 'Cache-Control': PAGE_CACHE });
+});
+
+// ── GET /posts/:slug.md — Raw Markdown source ─────────────────────────────
+
+pub.get('/posts/:slug{.+\\.md}', async (c) => {
+  const rawSlug = c.req.param('slug');
+  const slug = rawSlug.replace(/\.md$/, '');
+
+  const [post, markdown] = await Promise.all([
+    dbGetPostBySlug(c.env.DB, slug, true),
+    r2GetText(c.env.BUCKET, r2Keys.contentMd(slug)),
+  ]);
+
+  if (!post || markdown === null) {
+    return c.text('404 — Post not found', 404);
+  }
+
+  return c.text(markdown, 200, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Cache-Control': PAGE_CACHE,
+  });
 });
 
 // ── GET /posts/:slug — Single post ────────────────────────────────────────

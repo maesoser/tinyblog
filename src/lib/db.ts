@@ -264,15 +264,20 @@ export async function dbPruneOrphanedTags(db: D1Database): Promise<void> {
  */
 export async function dbGetSiteConfig(db: D1Database): Promise<SiteConfig> {
   const { results } = await db
-    .prepare('SELECT key, value FROM site_config WHERE key IN (?, ?, ?)')
-    .bind('blog_name', 'blog_tagline', 'site_url')
+    .prepare('SELECT key, value FROM site_config WHERE key IN (?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind('blog_name', 'blog_tagline', 'site_url', 'social_rss', 'social_linkedin', 'social_github', 'social_bluesky', 'social_x')
     .all<{ key: string; value: string }>();
 
   const map = new Map(results.map((r) => [r.key, r.value]));
   return {
-    blog_name:    map.get('blog_name')    ?? 'tinyblog',
-    blog_tagline: map.get('blog_tagline') ?? 'A personal blog',
-    site_url:     map.get('site_url')     ?? '',
+    blog_name:      map.get('blog_name')      ?? 'tinyblog',
+    blog_tagline:   map.get('blog_tagline')   ?? 'A personal blog',
+    site_url:       map.get('site_url')       ?? '',
+    social_rss:     map.get('social_rss')     ?? '',
+    social_linkedin: map.get('social_linkedin') ?? '',
+    social_github:  map.get('social_github')  ?? '',
+    social_bluesky: map.get('social_bluesky') ?? '',
+    social_x:       map.get('social_x')       ?? '',
   };
 }
 

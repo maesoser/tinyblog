@@ -109,6 +109,40 @@
       </div>
     </div>
 
+    <!-- ── Social Links ────────────────────────────────────────────────── -->
+    <div class="settings-section-label" style="margin-top:32px;">Social Links</div>
+    <div class="admin-card">
+      <h2 class="card-section-title">Social Profiles</h2>
+      <p class="form-hint" style="margin-bottom:16px;">
+        Links shown on the landing page. Leave blank to hide an icon.
+        RSS defaults to <code>/rss</code> if left empty.
+      </p>
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label" for="socialRssInput">RSS URL</label>
+          <input class="form-input" id="socialRssInput" type="url" placeholder="/rss" />
+        </div>
+        <div>
+          <label class="form-label" for="socialLinkedinInput">LinkedIn URL</label>
+          <input class="form-input" id="socialLinkedinInput" type="url" placeholder="https://linkedin.com/in/yourprofile" />
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label" for="socialGithubInput">GitHub URL</label>
+          <input class="form-input" id="socialGithubInput" type="url" placeholder="https://github.com/yourusername" />
+        </div>
+        <div>
+          <label class="form-label" for="socialBlueskyInput">Bluesky URL</label>
+          <input class="form-input" id="socialBlueskyInput" type="url" placeholder="https://bsky.app/profile/you.bsky.social" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="socialXInput">X (Twitter) URL</label>
+        <input class="form-input" id="socialXInput" type="url" placeholder="https://x.com/yourusername" />
+      </div>
+    </div>
+
     <!-- ── Header / Footer templates ───────────────────────────────────── -->
     <div class="settings-section-label" style="margin-top:32px;">Page Templates</div>
     <div class="settings-grid">
@@ -263,10 +297,15 @@
     }
 
     if (siteConfigRes.ok) {
-      const { blog_name, blog_tagline, site_url } = await siteConfigRes.json();
-      document.getElementById('blogNameInput').value    = blog_name    || '';
-      document.getElementById('blogTaglineInput').value = blog_tagline || '';
-      document.getElementById('siteUrlInput').value     = site_url     || '';
+      const { blog_name, blog_tagline, site_url, social_rss, social_linkedin, social_github, social_bluesky, social_x } = await siteConfigRes.json();
+      document.getElementById('blogNameInput').value      = blog_name      || '';
+      document.getElementById('blogTaglineInput').value   = blog_tagline   || '';
+      document.getElementById('siteUrlInput').value       = site_url       || '';
+      document.getElementById('socialRssInput').value     = social_rss     || '';
+      document.getElementById('socialLinkedinInput').value = social_linkedin || '';
+      document.getElementById('socialGithubInput').value  = social_github  || '';
+      document.getElementById('socialBlueskyInput').value = social_bluesky || '';
+      document.getElementById('socialXInput').value       = social_x       || '';
       // Update sidebar logo to reflect stored name
       if (blog_name) document.getElementById('sidebarLogo').textContent = blog_name;
     }
@@ -285,9 +324,14 @@
     const header      = document.getElementById('headerTemplate').value;
     const footer      = document.getElementById('footerTemplate').value;
     const aboutMd     = aboutMDE.value();
-    const blog_name    = document.getElementById('blogNameInput').value.trim();
-    const blog_tagline = document.getElementById('blogTaglineInput').value.trim();
-    const site_url     = document.getElementById('siteUrlInput').value.trim().replace(/\/$/, '');
+    const blog_name      = document.getElementById('blogNameInput').value.trim();
+    const blog_tagline   = document.getElementById('blogTaglineInput').value.trim();
+    const site_url       = document.getElementById('siteUrlInput').value.trim().replace(/\/$/, '');
+    const social_rss     = document.getElementById('socialRssInput').value.trim();
+    const social_linkedin = document.getElementById('socialLinkedinInput').value.trim();
+    const social_github  = document.getElementById('socialGithubInput').value.trim();
+    const social_bluesky = document.getElementById('socialBlueskyInput').value.trim();
+    const social_x       = document.getElementById('socialXInput').value.trim();
 
     const [templatesRes, siteConfigRes] = await Promise.all([
       apiFetch('/api/templates', {
@@ -299,9 +343,14 @@
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          blog_name:    blog_name    || undefined,
-          blog_tagline: blog_tagline || undefined,
-          site_url:     site_url     || undefined,
+          blog_name:      blog_name      || undefined,
+          blog_tagline:   blog_tagline   || undefined,
+          site_url:       site_url       || undefined,
+          social_rss:     social_rss     || undefined,
+          social_linkedin: social_linkedin || undefined,
+          social_github:  social_github  || undefined,
+          social_bluesky: social_bluesky || undefined,
+          social_x:       social_x       || undefined,
         }),
       }),
     ]);

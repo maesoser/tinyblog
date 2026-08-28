@@ -1,5 +1,23 @@
 import type { PostWithTags, SiteConfig } from '../types.js';
 
+// ── Social link SVG icons ──────────────────────────────────────────────────
+
+const SOCIAL_ICONS: Record<string, string> = {
+  rss: /* html */ `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20C4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/></svg>`,
+  linkedin: /* html */ `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>`,
+  github: /* html */ `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>`,
+  bluesky: /* html */ `<svg width="18" height="18" viewBox="0 0 600 530" fill="currentColor" aria-hidden="true"><path d="M135.72 44.03C202.216 93.951 273.74 195.17 300 249.49c26.262-54.316 97.782-155.54 164.28-205.46C512.26 8.009 590-19.862 590 68.825c0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.38-3.69-10.832-3.708-7.896-.017-2.936-1.193.516-3.707 7.896-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.26 82.697-152.22-67.108 11.421-142.55-7.45-163.25-81.433C20.15 217.613 10 86.535 10 68.825c0-88.687 77.742-60.816 125.72-24.795z"/></svg>`,
+  x: /* html */ `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.261 5.635L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>`,
+};
+
+const SOCIAL_LABELS: Record<string, string> = {
+  rss: 'RSS',
+  linkedin: 'LinkedIn',
+  github: 'GitHub',
+  bluesky: 'Bluesky',
+  x: 'X',
+};
+
 // ── Public blog shell ──────────────────────────────────────────────────────
 
 /**
@@ -84,7 +102,7 @@ export function defaultHeader(blogName: string): string {
     <div class="header-inner container">
       <a href="/" class="site-logo">${escHtml(blogName)}</a>
       <nav class="header-nav">
-        <a href="/" class="header-nav-link">Posts</a>
+        <a href="/posts" class="header-nav-link">Posts</a>
         <a href="/about" class="header-nav-link">About</a>
         <a href="/admin/" class="header-nav-admin">Admin</a>
       </nav>
@@ -176,6 +194,89 @@ export function renderPostList(
     <section class="post-list container">
       ${items}
     </section>${paginationHtml}`;
+}
+
+// ── Homepage (landing page) ────────────────────────────────────────────────
+
+/**
+ * Renders the redesigned landing page: hero (name + tagline + social links),
+ * about section (pre-rendered HTML from R2), and the last 3 published posts.
+ * @param siteConfig  Site configuration including social link URLs
+ * @param aboutHtml   Pre-rendered HTML from templates/about.html (empty string → omit section)
+ * @param recentPosts Up to 3 most-recent published posts
+ */
+export function renderHomepage(
+  siteConfig: SiteConfig,
+  aboutHtml: string,
+  recentPosts: PostWithTags[],
+): string {
+  // ── Social links row ──────────────────────────────────────────────────────
+  const socialEntries: Array<{ key: string; href: string }> = [
+    { key: 'rss',      href: siteConfig.social_rss      || '/rss' },
+    { key: 'linkedin', href: siteConfig.social_linkedin },
+    { key: 'github',   href: siteConfig.social_github },
+    { key: 'bluesky',  href: siteConfig.social_bluesky },
+    { key: 'x',        href: siteConfig.social_x },
+  ];
+
+  // RSS always shows (falls back to /rss); others only show if configured
+  const socialLinks = socialEntries
+    .filter((e) => e.key === 'rss' || e.href)
+    .map(
+      (e) => /* html */ `
+      <a href="${escHtml(e.href)}" class="home-social-link"${e.key !== 'rss' ? ' target="_blank" rel="noopener noreferrer"' : ''} aria-label="${SOCIAL_LABELS[e.key]}">
+        ${SOCIAL_ICONS[e.key]}
+        <span>${SOCIAL_LABELS[e.key]}</span>
+      </a>`,
+    )
+    .join('');
+
+  // ── About section ─────────────────────────────────────────────────────────
+  const aboutSection = aboutHtml
+    ? /* html */ `
+    <section class="home-about container">
+      <div class="home-about-content prose">
+        ${aboutHtml}
+      </div>
+    </section>`
+    : '';
+
+  // ── Recent posts ──────────────────────────────────────────────────────────
+  const postItems = recentPosts
+    .map(
+      (p) => /* html */ `
+      <article class="post-card">
+        <div class="post-card-meta">
+          <time datetime="${p.published_at ?? p.created_at}">${formatDate(p.published_at ?? p.created_at)}</time>
+          ${p.tags.length ? `<span class="sep">·</span>${p.tags.map((t) => `<a href="/tags/${encodeURIComponent(t)}" class="tag">${escHtml(t)}</a>`).join('')}` : ''}
+        </div>
+        <h2 class="post-card-title">
+          <a href="/posts/${encodeURIComponent(p.slug)}">${escHtml(p.title)}</a>
+        </h2>
+        ${p.excerpt ? `<p class="post-card-excerpt">${escHtml(p.excerpt)}</p>` : ''}
+      </article>`,
+    )
+    .join('\n');
+
+  const postsSection = /* html */ `
+    <section class="home-posts container">
+      <h2 class="home-posts-heading">Occasional blog posts</h2>
+      <div class="home-post-list">
+        ${postItems || '<p class="empty-state">No posts yet. Check back soon!</p>'}
+      </div>
+      <a href="/posts" class="home-view-all">View all posts &rarr;</a>
+    </section>`;
+
+  return /* html */ `
+    <div class="home-hero container">
+      <h1 class="home-blog-name">${escHtml(siteConfig.blog_name)}</h1>
+      <p class="home-tagline">${escHtml(siteConfig.blog_tagline)}</p>
+      <nav class="home-social-links" aria-label="Social links">
+        ${socialLinks}
+      </nav>
+    </div>
+    ${aboutSection}
+    ${postsSection}`;
 }
 
 // ── Single post ────────────────────────────────────────────────────────────

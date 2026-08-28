@@ -44,6 +44,12 @@ export interface SiteConfig {
   blog_tagline: string;
   /** Full origin of the site, e.g. "https://myblog.com" (no trailing slash). Used for RSS and sitemap URLs. */
   site_url: string;
+  /** Social link URLs — empty string means "not set, don't render the icon". */
+  social_rss: string;
+  social_linkedin: string;
+  social_github: string;
+  social_bluesky: string;
+  social_x: string;
 }
 
 // ── API request bodies ─────────────────────────────────────────────────────
@@ -77,6 +83,11 @@ export interface SiteConfigBody {
   blog_name?: string;
   blog_tagline?: string;
   site_url?: string;
+  social_rss?: string;
+  social_linkedin?: string;
+  social_github?: string;
+  social_bluesky?: string;
+  social_x?: string;
 }
 
 // ── R2 key helpers ─────────────────────────────────────────────────────────
